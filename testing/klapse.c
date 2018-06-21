@@ -10,11 +10,11 @@ MODULE_VERSION("1.0");
 
 //Tunables :
 int daytime_r, daytime_g, daytime_b, target_r, target_g, target_b;
-int livedisplay_start_hour, livedisplay_stop_hour, force_livedisplay;
+int livedisplay_start_hour, livedisplay_stop_hour;
 int brightness_lvl_auto_hour_start, brightness_lvl_auto_hour_end;
-unsigned int livedisplay_aggression, brightness_lvl, klapse_brightness_threshold;
+unsigned int livedisplay_aggression, brightness_lvl;
 /* threshold var is linked to leds.c for dynamic brightness transition */
-bool brightness_lvl_auto_enable;
+bool brightness_lvl_auto_enable, force_livedisplay;
 
 /*
  *Internal calculation variables :
@@ -138,27 +138,6 @@ void klapse_pulse(void)
     }
 }
 
-void klapse_set_rgb_daytime_target(bool target)
-{
-    if(!target)
-        force_livedisplay_set_rgb_brightness(daytime_r,daytime_g,daytime_b);
-    else
-        force_livedisplay_set_rgb_brightness(target_r,target_g,target_b);
-    
-}
-
-void daytime_rgb_updated(int r,int g, int b)
-{
-    daytime_r = r;
-    daytime_g = g;
-    daytime_b = b;    
-	if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour))) 
-	    force_livedisplay_set_rgb_brightness(daytime_r, daytime_g, daytime_b);
-}
-
-
-
-
 //SYSFS tunables :
 static ssize_t force_livedisplay_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -178,7 +157,8 @@ static ssize_t force_livedisplay_dump(struct device *dev,
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
-    set_force_livedisplay(tmpval);
+    if((tmpval == 0) || (tmpvale == 1))
+		force_livedisplay = tmpval;
     
 	return count;
 }
@@ -486,35 +466,6 @@ static ssize_t brightness_lvl_auto_enable_dump(struct device *dev,
 	return count;
 }
 
-static ssize_t klapse_brightness_threshold_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	size_t count = 0;
-
-	count += sprintf(buf, "%d\n", klapse_brightness_threshold);
-
-	return count;
-}
-
-static ssize_t klapse_brightness_threshold_dump(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-    int tmpval = 0;    
-    
-	if (!sscanf(buf, "%d", &tmpval))
-		return -EINVAL;
-
-    if ((tmpval > 0) || (tmpval <= 255))
-    {
-        klapse_brightness_threshold = tmpval;
-        if(force_livedisplay == 2)
-            force_livedisplay_set_rgb(daytime_r, daytime_g, daytime_b);
-        target_achieved = 0;
-    }
-    
-	return count;
-}
-
 
 
 static DEVICE_ATTR(enable_klapse_livedisplay, 0666, force_livedisplay_show, force_livedisplay_dump);
@@ -529,7 +480,6 @@ static DEVICE_ATTR(klapse_stop_hour, 0666, livedisplay_stop_hour_show, livedispl
 static DEVICE_ATTR(klapse_scaling_rate, 0666, livedisplay_aggression_show, livedisplay_aggression_dump);
 static DEVICE_ATTR(brightness_multiplier, 0666, brightness_lvl_show, brightness_lvl_dump);
 static DEVICE_ATTR(brightness_multiplier_auto, 0666, brightness_lvl_auto_enable_show, brightness_lvl_auto_enable_dump);
-static DEVICE_ATTR(klapse_brightness_threshold, 0666, klapse_brightness_threshold_show, klapse_brightness_threshold_dump);
 
 
 
@@ -556,7 +506,6 @@ static void values_setup(void)
     force_livedisplay = 0;
     target_achieved = 0;
     brightness_lvl_auto_enable = 0;
-    klapse_brightness_threshold = DEFAULT_BRIGHTNESS_THRESHOLD;
     
     do_gettimeofday(&time);
     local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
@@ -624,10 +573,6 @@ int rc;
 	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_multiplier_auto.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for brightness_multiplier_auto\n", __func__);
-	}  
-	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_klapse_brightness_threshold.attr);
-	if (rc) {
-		pr_warn("%s: sysfs_create_file failed for klapse_brightness_threshold\n", __func__);
 	}
 
 return 0;
