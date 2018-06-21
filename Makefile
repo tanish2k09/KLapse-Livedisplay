@@ -1,0 +1,2 @@
+obj-$(CONFIG_KLAPSE_LIVEDISPLAY) += klapse/
+

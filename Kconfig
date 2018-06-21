@@ -1,0 +1,6 @@
+config KLAPSE_LIVEDISPLAY
+  bool CONFIG_KLAPSE_LIVEDISPLAY
+  default n
+  help
+    A simple rgb dynamic lapsing module similar to livedisplay
+
