@@ -138,6 +138,23 @@ void klapse_pulse(void)
     }
 }
 
+void set_force_livedisplay(int val)
+{
+    if( (val <= 1) && (val >= 0) )
+    {
+        force_livedisplay = val;
+        if (force_livedisplay != 1)
+        {
+            force_livedisplay_set_rgb_brightness(daytime_r, daytime_g, daytime_b);
+            target_achieved = 0;
+            current_r = daytime_r;
+            current_g = daytime_g;
+            current_b = daytime_b;                           
+        }
+        update_disp_mgr((val > 0 ? 1 : 0));
+    }
+}
+
 //SYSFS tunables :
 static ssize_t force_livedisplay_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -157,8 +174,7 @@ static ssize_t force_livedisplay_dump(struct device *dev,
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
-    if((tmpval == 0) || (tmpvale == 1))
-		force_livedisplay = tmpval;
+    set_force_livedisplay(tmpval);
     
 	return count;
 }
