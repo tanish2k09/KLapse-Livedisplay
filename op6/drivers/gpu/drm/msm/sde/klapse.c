@@ -1,12 +1,12 @@
-#include <linux/module.h> 
-#include <linux/init.h> 
+#include <linux/module.h>
+#include <linux/init.h>
 #include "klapse.h"
 #include "sde_hw_color_proc_v4.h"
 
 MODULE_LICENSE("GPLv3");
 MODULE_AUTHOR("tanish2k09");
 MODULE_DESCRIPTION("A simple rgb dynamic lapsing module similar to livedisplay");
-MODULE_VERSION("1.0"); 
+MODULE_VERSION("1.0");
 
 
 //Tunables :
@@ -36,17 +36,17 @@ void calc_active_minutes(void)
     if(livedisplay_start_hour > livedisplay_stop_hour)
         active_minutes = (24 + livedisplay_stop_hour - livedisplay_start_hour)*60;
     else
-        active_minutes = (livedisplay_stop_hour - livedisplay_start_hour)*60;    
+        active_minutes = (livedisplay_stop_hour - livedisplay_start_hour)*60;
 }
 
 static int get_minutes_since_start(void)
 {
     int hour, min;
     hour = tm.tm_hour - livedisplay_start_hour;
-    
+
     if (hour < 0)
         hour += 24;
-        
+
     min = ((hour*60) + tm.tm_min);
     return min;
 }
@@ -65,11 +65,11 @@ void force_livedisplay_set_rgb(int r, int g, int b)
 
 void force_livedisplay_set_rgb_brightness(int r,int g,int b)
 {
-    
+
     r = ((r*brightness_lvl)/10);
     g = ((g*brightness_lvl)/10);
     b = ((b*brightness_lvl)/10);
-    
+
     if (r < 0)
         r = SCALE_VAL_MIN;
     else if (r > daytime_r)
@@ -82,7 +82,7 @@ void force_livedisplay_set_rgb_brightness(int r,int g,int b)
         b = SCALE_VAL_MIN;
     else if (b > daytime_b)
         b = daytime_b;
-    
+
     force_livedisplay_set_rgb(r,g,b);
 }
 //Livedisplay calc functions end here.
@@ -96,7 +96,7 @@ void klapse_pulse(void)
       	do_gettimeofday(&time);
         local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
         rtc_time_to_tm(local_time, &tm);
-        
+
         //First we check for brightness scale automation...
         if (brightness_lvl_auto_enable == 1)
         {
@@ -106,43 +106,43 @@ void klapse_pulse(void)
                 brightness_lvl = b_cache;
         }
         else
-            brightness_lvl = b_cache;	            
-            
-        
+            brightness_lvl = b_cache;
+
+
         if(!((tm.tm_hour >= livedisplay_start_hour) || (tm.tm_hour < livedisplay_stop_hour))) //Means not in livedisplay time period.
         {
-            force_livedisplay_set_rgb_brightness(daytime_r,daytime_g,daytime_b); 
+            force_livedisplay_set_rgb_brightness(daytime_r,daytime_g,daytime_b);
             target_achieved = 0;
-        }        
+        }
         else if (target_achieved == 0)
         {
             current_r = daytime_r - (((daytime_r - target_r)*(get_minutes_since_start())*livedisplay_aggression)/(active_minutes*10));
             current_g = daytime_g - (((daytime_g - target_g)*(get_minutes_since_start())*livedisplay_aggression)/(active_minutes*10));
             current_b = daytime_b - (((daytime_b - target_b)*(get_minutes_since_start())*livedisplay_aggression)/(active_minutes*10));
-            
+
             if ((current_r <= target_r) && (current_g <= target_g) && (current_b <= target_b))
             {
                 target_achieved = 1;
                 current_r = target_r;
                 current_g = target_g;
                 current_b = target_b;
-            }    
-            
+            }
+
             force_livedisplay_set_rgb_brightness(current_r, current_g, current_b);
-       
+
         }
         else if (target_achieved == 1)
         {
             int backtime = get_minutes_before_stop();
             if(backtime <= 30)
-            {                    
+            {
                 current_r = target_r + (((daytime_r - target_r)*(30 - backtime))/30);
                 current_g = target_g + (((daytime_g - target_g)*(30 - backtime))/30);
                 current_b = target_b + (((daytime_b - target_b)*(30 - backtime))/30);
-                
+
                 force_livedisplay_set_rgb_brightness(current_r, current_g, current_b);
-            }                                        
-        }                
+            }
+        }
     }
 }
 
@@ -159,7 +159,7 @@ void set_force_livedisplay(int val)
             target_achieved = 0;
             current_r = daytime_r;
             current_g = daytime_g;
-            current_b = daytime_b;                           
+            current_b = daytime_b;
         }
         /// update_disp_mgr((val > 0 ? 1 : 0)); Maybe NOT required
     }
@@ -173,7 +173,7 @@ void klapse_set_rgb_daytime_target(bool target)
         force_livedisplay_set_rgb_brightness(daytime_r,daytime_g,daytime_b);
     else
         force_livedisplay_set_rgb_brightness(target_r,target_g,target_b);
-    
+
 }
 */
 
@@ -181,8 +181,8 @@ void daytime_rgb_updated(int r,int g, int b)
 {
     daytime_r = r;
     daytime_g = g;
-    daytime_b = b;    
-	if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour))) 
+    daytime_b = b;
+	if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour)))
 	    force_livedisplay_set_rgb_brightness(daytime_r, daytime_g, daytime_b);
 }
 
@@ -200,13 +200,13 @@ static ssize_t force_livedisplay_show(struct device *dev,
 static ssize_t force_livedisplay_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
     set_force_livedisplay(tmpval);
-    
+
 	return count;
 }
 
@@ -223,18 +223,18 @@ static ssize_t daytime_r_show(struct device *dev,
 static ssize_t daytime_r_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
     if ((tmpval > (SCALE_VAL_MIN)) && (tmpval <= MAX_SCALE))
     {
         daytime_r = tmpval;
-		if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour))) 
+		if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour)))
 		    force_livedisplay_set_rgb_brightness(daytime_r, daytime_g, daytime_b);
     }
-    
+
 	return count;
 }
 
@@ -251,18 +251,18 @@ static ssize_t daytime_g_show(struct device *dev,
 static ssize_t daytime_g_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
     if ((tmpval > (SCALE_VAL_MIN)) && (tmpval <= MAX_SCALE))
     {
         daytime_g = tmpval;
-		if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour))) 
+		if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour)))
 		    force_livedisplay_set_rgb_brightness(daytime_r, daytime_g, daytime_b);
     }
-    
+
 	return count;
 }
 
@@ -279,18 +279,18 @@ static ssize_t daytime_b_show(struct device *dev,
 static ssize_t daytime_b_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
     if ((tmpval > (SCALE_VAL_MIN)) && (tmpval <= MAX_SCALE))
     {
         daytime_b = tmpval;
-		if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour))) 
+		if ((force_livedisplay == 0) || ((force_livedisplay == 1) && (tm.tm_hour < livedisplay_start_hour) && (tm.tm_hour >=livedisplay_stop_hour)))
 		    force_livedisplay_set_rgb_brightness(daytime_r, daytime_g, daytime_b);
     }
-    
+
 	return count;
 }
 
@@ -307,8 +307,8 @@ static ssize_t target_r_show(struct device *dev,
 static ssize_t target_r_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
@@ -317,7 +317,7 @@ static ssize_t target_r_dump(struct device *dev,
         target_r = tmpval;
         target_achieved = 0;
     }
-    
+
 	return count;
 }
 
@@ -334,8 +334,8 @@ static ssize_t target_g_show(struct device *dev,
 static ssize_t target_g_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
@@ -344,7 +344,7 @@ static ssize_t target_g_dump(struct device *dev,
         target_g = tmpval;
         target_achieved = 0;
     }
-    
+
 	return count;
 }
 
@@ -361,8 +361,8 @@ static ssize_t target_b_show(struct device *dev,
 static ssize_t target_b_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
@@ -371,7 +371,7 @@ static ssize_t target_b_dump(struct device *dev,
         target_b = tmpval;
         target_achieved = 0;
     }
-    
+
 	return count;
 }
 
@@ -388,18 +388,18 @@ static ssize_t livedisplay_start_hour_show(struct device *dev,
 static ssize_t livedisplay_start_hour_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
-    if ((tmpval >= 0) && (tmpval < 24))
+    if ((tmpval >= 0) && (tmpval < 24) && (tmpval != livedisplay_stop_hour))
     {
         livedisplay_start_hour = tmpval;
         target_achieved = 0;
         calc_active_minutes();
     }
-    
+
 	return count;
 }
 
@@ -416,8 +416,8 @@ static ssize_t livedisplay_stop_hour_show(struct device *dev,
 static ssize_t livedisplay_stop_hour_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
@@ -427,7 +427,7 @@ static ssize_t livedisplay_stop_hour_dump(struct device *dev,
         target_achieved = 0;
         calc_active_minutes();
     }
-    
+
 	return count;
 }
 
@@ -444,8 +444,8 @@ static ssize_t livedisplay_aggression_show(struct device *dev,
 static ssize_t livedisplay_aggression_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
@@ -454,7 +454,7 @@ static ssize_t livedisplay_aggression_dump(struct device *dev,
         livedisplay_aggression = tmpval;
         target_achieved = 0;
     }
-    
+
 	return count;
 }
 
@@ -471,17 +471,17 @@ static ssize_t brightness_lvl_show(struct device *dev,
 static ssize_t brightness_lvl_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
-    if ((tmpval > 2) && (tmpval <= 10))
+    if ((tmpval >= 2) && (tmpval <= 20))
     {
         b_cache = tmpval;
         target_achieved = 0;
     }
-    
+
 	return count;
 }
 
@@ -499,8 +499,8 @@ static ssize_t brightness_lvl_auto_enable_show(struct device *dev,
 static ssize_t brightness_lvl_auto_enable_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
@@ -509,7 +509,61 @@ static ssize_t brightness_lvl_auto_enable_dump(struct device *dev,
         brightness_lvl_auto_enable = tmpval;
         target_achieved = 0;
     }
-    
+
+	return count;
+}
+
+static ssize_t brightness_lvl_auto_hour_start_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	size_t count = 0;
+
+	count += sprintf(buf, "%d\n", brightness_lvl_auto_hour_start);
+
+	return count;
+}
+
+static ssize_t brightness_lvl_auto_hour_start_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+    int tmpval = 0;
+
+	if (!sscanf(buf, "%d", &tmpval))
+		return -EINVAL;
+
+    if ((tmpval >= 0) && (tmpval < 24) && (tmpval != brightness_lvl_auto_hour_end))
+    {
+        brightness_lvl_auto_hour_start = tmpval;
+        target_achieved = 0;
+    }
+
+	return count;
+}
+
+static ssize_t brightness_lvl_auto_hour_end_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	size_t count = 0;
+
+	count += sprintf(buf, "%d\n", brightness_lvl_auto_hour_end);
+
+	return count;
+}
+
+static ssize_t brightness_lvl_auto_hour_start_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+    int tmpval = 0;
+
+	if (!sscanf(buf, "%d", &tmpval))
+		return -EINVAL;
+
+    if ((tmpval >= 0) && (tmpval < 24) && (tmpval != brightness_lvl_auto_hour_start))
+    {
+        brightness_lvl_auto_hour_end = tmpval;
+        target_achieved = 0;
+    }
+
 	return count;
 }
 
@@ -528,8 +582,8 @@ static ssize_t klapse_brightness_threshold_show(struct device *dev,
 static ssize_t klapse_brightness_threshold_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-    int tmpval = 0;    
-    
+    int tmpval = 0;
+
 	if (!sscanf(buf, "%d", &tmpval))
 		return -EINVAL;
 
@@ -540,14 +594,14 @@ static ssize_t klapse_brightness_threshold_dump(struct device *dev,
             force_livedisplay_set_rgb(daytime_r, daytime_g, daytime_b);
         target_achieved = 0;
     }
-    
+
 	return count;
 }
 */
 
 
 
-static DEVICE_ATTR(enable_klapse_livedisplay, 0644, force_livedisplay_show, force_livedisplay_dump);
+static DEVICE_ATTR(enable_klapse, 0644, force_livedisplay_show, force_livedisplay_dump);
 static DEVICE_ATTR(daytime_r, 0644, daytime_r_show, daytime_r_dump);
 static DEVICE_ATTR(daytime_g, 0644, daytime_g_show, daytime_g_dump);
 static DEVICE_ATTR(daytime_b, 0644, daytime_b_show, daytime_b_dump);
@@ -557,8 +611,11 @@ static DEVICE_ATTR(target_b, 0644, target_b_show, target_b_dump);
 static DEVICE_ATTR(klapse_start_hour, 0644, livedisplay_start_hour_show, livedisplay_start_hour_dump);
 static DEVICE_ATTR(klapse_stop_hour, 0644, livedisplay_stop_hour_show, livedisplay_stop_hour_dump);
 static DEVICE_ATTR(klapse_scaling_rate, 0644, livedisplay_aggression_show, livedisplay_aggression_dump);
-static DEVICE_ATTR(brightness_multiplier, 0644, brightness_lvl_show, brightness_lvl_dump);
-static DEVICE_ATTR(brightness_multiplier_auto, 0644, brightness_lvl_auto_enable_show, brightness_lvl_auto_enable_dump);
+static DEVICE_ATTR(brightness_factor, 0644, brightness_lvl_show, brightness_lvl_dump);
+static DEVICE_ATTR(brightness_factor_auto, 0644, brightness_lvl_auto_enable_show, brightness_lvl_auto_enable_dump);
+static DEVICE_ATTR(brightness_factor_auto_start_hour, 0644, brightness_lvl_auto_hour_start_show, brightness_lvl_auto_hour_start_dump);
+static DEVICE_ATTR(brightness_factor_auto_stop_hour, 0644, brightness_lvl_auto_hour_end_show, brightness_lvl_auto_hour_end_dump);
+
 //static DEVICE_ATTR(klapse_brightness_threshold, 0666, klapse_brightness_threshold_show, klapse_brightness_threshold_dump);
 
 
@@ -573,21 +630,21 @@ static void values_setup(void)
     current_g = MAX_SCALE;
     current_b = MAX_SCALE;
     target_r = MAX_SCALE;
-    target_g = (MAX_SCALE*10)/13;
-    target_b = (MAX_SCALE*10)/21;
+    target_g = (MAX_SCALE*79)/100;
+    target_b = (MAX_SCALE*59)/100;
     brightness_lvl = 10;
-    b_cache = 10;
-    active_minutes = 600;
-    livedisplay_aggression = 40;
+    b_cache = brightness_lvl;
+    livedisplay_aggression = 30;
     livedisplay_start_hour = 17;
     livedisplay_stop_hour = 7;
+    active_minutes = calc_active_minutes();
     brightness_lvl_auto_hour_start = 23;
     brightness_lvl_auto_hour_end = 6;
     force_livedisplay = 0;
     target_achieved = 0;
     brightness_lvl_auto_enable = 0;
     //klapse_brightness_threshold = DEFAULT_BRIGHTNESS_THRESHOLD;
-    
+
     do_gettimeofday(&time);
     local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
     rtc_time_to_tm(local_time, &tm);
@@ -600,14 +657,14 @@ static int __init klapse_init(void){
 
 int rc;
 
-    values_setup();        
-    
-    klapse_livedisplay_kobj = kobject_create_and_add("klapse_livedisplay", NULL) ;
+    values_setup();
+
+    klapse_livedisplay_kobj = kobject_create_and_add("klapse", NULL) ;
     if (klapse_livedisplay_kobj == NULL) {
 	    pr_warn("%s: klapse_livedisplay_kobj create_and_add failed\n", __func__);
     }
-    
-    rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_enable_klapse_livedisplay.attr);
+
+    rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_enable_klapse.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for enable_klapse_livedisplay\n", __func__);
 	}
@@ -654,7 +711,15 @@ int rc;
 	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_multiplier_auto.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for brightness_multiplier_auto\n", __func__);
-	}  
+	}
+  rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_factor_auto_start_hour.attr);
+	if (rc) {
+		pr_warn("%s: sysfs_create_file failed for brightness_factor_auto_start_hour\n", __func__);
+	}
+  rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_factor_auto_stop_hour.attr);
+	if (rc) {
+		pr_warn("%s: sysfs_create_file failed for brightness_factor_auto_stop_hour\n", __func__);
+	}
 	/* REQUIRES BRIGHTNESS INTEGRATION
 	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_klapse_brightness_threshold.attr);
 	if (rc) {
