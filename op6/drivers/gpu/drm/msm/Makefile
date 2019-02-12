@@ -1,0 +1,1 @@
+msm_drm-$(CONFIG_KLAPSE) += sde/klapse.o
