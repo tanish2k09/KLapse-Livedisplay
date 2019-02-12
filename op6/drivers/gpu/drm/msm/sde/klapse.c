@@ -13,21 +13,20 @@ MODULE_VERSION("1.0");
 int daytime_r, daytime_g, daytime_b, target_r, target_g, target_b;
 int livedisplay_start_hour, livedisplay_stop_hour, force_livedisplay;
 int brightness_lvl_auto_hour_start, brightness_lvl_auto_hour_end;
-unsigned int livedisplay_aggression, brightness_lvl, klapse_brightness_threshold;
-/* threshold var is linked to leds.c for dynamic brightness transition */
+unsigned int livedisplay_aggression, brightness_lvl;
 bool brightness_lvl_auto_enable;
 
 /*
  *Internal calculation variables :
  *WARNING : DO NOT MAKE THEM TUNABLE
  */
-static int current_r, current_g, current_b;
-unsigned int b_cache;
-static unsigned int active_minutes;
 bool target_achieved;
-static struct timeval time;
+unsigned int b_cache;
+static int current_r, current_g, current_b;
+static unsigned int active_minutes;
 static unsigned long local_time;
 struct rtc_time tm;
+static struct timeval time;
 
 
 //Livedisplay related functions
@@ -148,8 +147,6 @@ void klapse_pulse(void)
 
 void set_force_livedisplay(int val)
 {
-    // Val 2 REQUIRES BRIGHTNESS INTEGRATION
-    // if( (val <= 2) && (val >= 0) )
     if( (val < 2) && (val >= 0) )
     {
         force_livedisplay = val;
@@ -161,21 +158,8 @@ void set_force_livedisplay(int val)
             current_g = daytime_g;
             current_b = daytime_b;
         }
-        /// update_disp_mgr((val > 0 ? 1 : 0)); Maybe NOT required
     }
 }
-
-/* REQUIRES FUNCTIONAL BRIGHTNESS INTEGRATION
-
-void klapse_set_rgb_daytime_target(bool target)
-{
-    if(!target)
-        force_livedisplay_set_rgb_brightness(daytime_r,daytime_g,daytime_b);
-    else
-        force_livedisplay_set_rgb_brightness(target_r,target_g,target_b);
-
-}
-*/
 
 void daytime_rgb_updated(int r,int g, int b)
 {
@@ -567,40 +551,6 @@ static ssize_t brightness_lvl_auto_hour_start_dump(struct device *dev,
 	return count;
 }
 
-/* REQUIRES BRIGHTNESS INTEGRATION
-
-static ssize_t klapse_brightness_threshold_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	size_t count = 0;
-
-	count += sprintf(buf, "%d\n", klapse_brightness_threshold);
-
-	return count;
-}
-
-static ssize_t klapse_brightness_threshold_dump(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-    int tmpval = 0;
-
-	if (!sscanf(buf, "%d", &tmpval))
-		return -EINVAL;
-
-    if ((tmpval > 0) || (tmpval <= 255))
-    {
-        klapse_brightness_threshold = tmpval;
-        if(force_livedisplay == 2)
-            force_livedisplay_set_rgb(daytime_r, daytime_g, daytime_b);
-        target_achieved = 0;
-    }
-
-	return count;
-}
-*/
-
-
-
 static DEVICE_ATTR(enable_klapse, 0644, force_livedisplay_show, force_livedisplay_dump);
 static DEVICE_ATTR(daytime_r, 0644, daytime_r_show, daytime_r_dump);
 static DEVICE_ATTR(daytime_g, 0644, daytime_g_show, daytime_g_dump);
@@ -615,10 +565,6 @@ static DEVICE_ATTR(brightness_factor, 0644, brightness_lvl_show, brightness_lvl_
 static DEVICE_ATTR(brightness_factor_auto, 0644, brightness_lvl_auto_enable_show, brightness_lvl_auto_enable_dump);
 static DEVICE_ATTR(brightness_factor_auto_start_hour, 0644, brightness_lvl_auto_hour_start_show, brightness_lvl_auto_hour_start_dump);
 static DEVICE_ATTR(brightness_factor_auto_stop_hour, 0644, brightness_lvl_auto_hour_end_show, brightness_lvl_auto_hour_end_dump);
-
-//static DEVICE_ATTR(klapse_brightness_threshold, 0666, klapse_brightness_threshold_show, klapse_brightness_threshold_dump);
-
-
 
 //INIT
 static void values_setup(void)
@@ -643,7 +589,6 @@ static void values_setup(void)
     force_livedisplay = 0;
     target_achieved = 0;
     brightness_lvl_auto_enable = 0;
-    //klapse_brightness_threshold = DEFAULT_BRIGHTNESS_THRESHOLD;
 
     do_gettimeofday(&time);
     local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
@@ -664,7 +609,7 @@ int rc;
 	    pr_warn("%s: klapse_livedisplay_kobj create_and_add failed\n", __func__);
     }
 
-    rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_enable_klapse.attr);
+  rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_enable_klapse.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for enable_klapse_livedisplay\n", __func__);
 	}
@@ -720,12 +665,6 @@ int rc;
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for brightness_factor_auto_stop_hour\n", __func__);
 	}
-	/* REQUIRES BRIGHTNESS INTEGRATION
-	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_klapse_brightness_threshold.attr);
-	if (rc) {
-		pr_warn("%s: sysfs_create_file failed for klapse_brightness_threshold\n", __func__);
-	}
-	*/
 
 return 0;
 }
