@@ -37,4 +37,8 @@ void sde_setup_dspp_igcv3(struct sde_hw_dspp *ctx, void *cfg);
  */
 void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg);
 
+extern unsigned short kcal_red;
+extern unsigned short kcal_green;
+extern unsigned short kcal_blue;
+
 #endif /* _SDE_HW_COLOR_PROC_V4_H_ */
