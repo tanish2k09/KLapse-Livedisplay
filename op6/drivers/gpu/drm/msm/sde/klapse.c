@@ -534,7 +534,7 @@ static ssize_t brightness_lvl_auto_hour_end_show(struct device *dev,
 	return count;
 }
 
-static ssize_t brightness_lvl_auto_hour_start_dump(struct device *dev,
+static ssize_t brightness_lvl_auto_hour_end_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
     int tmpval = 0;
