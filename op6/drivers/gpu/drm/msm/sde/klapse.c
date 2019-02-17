@@ -649,13 +649,13 @@ int rc;
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for klapse_scaling_rate\n", __func__);
 	}
-	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_multiplier.attr);
+	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_factor.attr);
 	if (rc) {
-		pr_warn("%s: sysfs_create_file failed for brightness_multiplier\n", __func__);
+		pr_warn("%s: sysfs_create_file failed for brightness_factor\n", __func__);
 	}
-	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_multiplier_auto.attr);
+	rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_factor_auto.attr);
 	if (rc) {
-		pr_warn("%s: sysfs_create_file failed for brightness_multiplier_auto\n", __func__);
+		pr_warn("%s: sysfs_create_file failed for brightness_factor_auto\n", __func__);
 	}
   rc = sysfs_create_file(klapse_livedisplay_kobj, &dev_attr_brightness_factor_auto_start_hour.attr);
 	if (rc) {
