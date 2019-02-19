@@ -2,6 +2,14 @@
 #include <linux/init.h>
 #include "klapse.h"
 #include "sde_hw_color_proc_v4.h"
+#include <uapi/linux/time.h>
+#include <uapi/linux/rtc.h>
+#include <linux/rtc.h>
+
+
+#define MAX_SCALE 256
+#define SCALE_VAL_MIN 20
+//#define DEFAULT_BRIGHTNESS_THRESHOLD 40
 
 MODULE_LICENSE("GPLv3");
 MODULE_AUTHOR("tanish2k09");
@@ -55,14 +63,14 @@ static int get_minutes_before_stop(void)
     return (active_minutes - get_minutes_since_start());
 }
 
-void force_livedisplay_set_rgb(int r, int g, int b)
+static void force_livedisplay_set_rgb(int r, int g, int b)
 {
     kcal_red = r;
     kcal_green = g;
     kcal_blue = b;
 }
 
-void force_livedisplay_set_rgb_brightness(int r,int g,int b)
+static void force_livedisplay_set_rgb_brightness(int r,int g,int b)
 {
 
     r = ((r*brightness_lvl)/10);
@@ -71,16 +79,16 @@ void force_livedisplay_set_rgb_brightness(int r,int g,int b)
 
     if (r < 0)
         r = SCALE_VAL_MIN;
-    else if (r > daytime_r)
-        r = daytime_r;
+    else if (r > MAX_SCALE)
+        r = MAX_SCALE;
     if (g < 0)
         g = SCALE_VAL_MIN;
-    else if (g > daytime_g)
-        g = daytime_g;
+    else if (g > MAX_SCALE)
+        g = MAX_SCALE;
     if (b < 0)
         b = SCALE_VAL_MIN;
-    else if (b > daytime_b)
-        b = daytime_b;
+    else if (b > MAX_SCALE)
+        b = MAX_SCALE;
 
     force_livedisplay_set_rgb(r,g,b);
 }
@@ -432,7 +440,7 @@ static ssize_t livedisplay_aggression_dump(struct device *dev,
 	  if (!sscanf(buf, "%d", &tmpval))
 		  return -EINVAL;
 
-    if ((tmpval >= 0) && (tmpval < (MAX_SCALE*5)))
+    if ((tmpval >= 0) && (tmpval < (MAX_SCALE*10)))
     {
         livedisplay_aggression = tmpval;
         target_achieved = 0;
@@ -459,7 +467,7 @@ static ssize_t brightness_lvl_dump(struct device *dev,
 	  if (!sscanf(buf, "%d", &tmpval))
 		  return -EINVAL;
 
-    if ((tmpval >= 2) && (tmpval <= 20))
+    if ((tmpval >= 2) && (tmpval <= 10))
     {
         b_cache = tmpval;
         target_achieved = 0;
