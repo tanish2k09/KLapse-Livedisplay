@@ -7,14 +7,40 @@
 #include <linux/rtc.h>
 
 
-#define MAX_SCALE 256
-#define SCALE_VAL_MIN 20
-//#define DEFAULT_BRIGHTNESS_THRESHOLD 40
+/* DEFAULT_ENABLE values :
+ * 0 = off
+ * 1 = time-based scaling
+ * 2 = brightness-based scaling
+ */
+#define DEFAULT_ENABLE  0
 
-MODULE_LICENSE("GPLv3");
-MODULE_AUTHOR("tanish2k09");
+// MAX_SCALE : Maximum value of RGB possible
+#define MAX_SCALE       256
+
+// SCALE_VAL_MIN : Minimum value of RGB recommended
+#define SCALE_VAL_MIN   20
+
+// MAX_BRIGHTNESS : Maximum value of the display brightness/backlight
+#define MAX_BRIGHTNESS  1023
+
+/* UPPER_BL_LVL : Initial upper limit for brightness-dependent mode. 
+ * Value <= MAX_BRIGHTNESS && > LOWER_BL_LVL (MUST)
+ */
+#define UPPER_BL_LVL  200
+
+/* LOWER_BL_LVL : Initial lower limit for brightness-dependent mode. 
+ * Value < UPPER_BL_LVL (MUST)
+ */
+#define LOWER_BL_LVL 2
+
+#define LIC "GPLv3"
+#define AUT "tanish2k09"
+#define VER "2.0"
+
+MODULE_LICENSE(LIC);
+MODULE_AUTHOR(AUT);
 MODULE_DESCRIPTION("A simple rgb dynamic lapsing module similar to livedisplay");
-MODULE_VERSION("1.1");
+MODULE_VERSION(VER);
 
 
 //Tunables :
@@ -22,6 +48,7 @@ unsigned int daytime_r, daytime_g, daytime_b, target_r, target_g, target_b;
 unsigned int klapse_start_hour, klapse_stop_hour, enable_klapse;
 unsigned int brightness_factor_auto_start_hour, brightness_factor_auto_stop_hour;
 unsigned int klapse_scaling_rate, brightness_factor;
+unsigned int backlight_lower, backlight_upper;
 bool brightness_factor_auto_enable;
 
 /*
@@ -31,7 +58,7 @@ bool brightness_factor_auto_enable;
 static bool target_achieved;
 static unsigned int b_cache;
 static int current_r, current_g, current_b;
-static unsigned int active_minutes;
+static unsigned int active_minutes, last_bl;
 static unsigned long local_time;
 struct rtc_time tm;
 static struct timeval time;
@@ -68,6 +95,10 @@ static void set_rgb(int r, int g, int b)
     kcal_red = r;
     kcal_green = g;
     kcal_blue = b;
+    
+    current_r = r;
+    current_g = g;
+    current_b = b;
 }
 
 static void set_rgb_brightness(int r,int g,int b)
@@ -178,9 +209,29 @@ void klapse_pulse(void)
     }
 }
 
+// Brightness-based mode
+void set_rgb_slider(u32 bl_lvl)
+{
+  if ((enable_klapse == 2) && (bl_lvl <= MAX_BRIGHTNESS))
+  {
+    if (bl_lvl > backlight_upper)
+      set_rgb_brightness(daytime_r, daytime_g, daytime_b);
+    else if (bl_lvl < backlight_lower)
+      set_rgb_brightness(target_r, target_g, target_b);
+    else {
+      current_r = daytime_r - ((daytime_r - target_r)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
+      current_g = daytime_g - ((daytime_g - target_g)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
+      current_b = daytime_b - ((daytime_b - target_b)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
+      set_rgb_brightness(current_r, current_g, current_b);
+    }
+  }
+  
+  last_bl = bl_lvl;
+}
+
 void set_enable_klapse(int val)
 {
-    if ((val < 2) && (val >= 0))
+    if ((val <= 2) && (val >= 0))
     {
         enable_klapse = val;
         if (enable_klapse != 1)
@@ -192,6 +243,23 @@ void set_enable_klapse(int val)
             current_b = daytime_b;
         }
     }
+}
+
+//SYSFS node for details :
+static ssize_t info_show(struct device *dev,
+    struct device_attribute *attr, char *buf)
+{
+  size_t count = 0;
+
+  count += sprintf(buf, "Author : %s\nVersion : %s\nLicense : %s\n", AUT, VER, LIC);
+
+  return count;
+}
+
+static ssize_t info_dump(struct device *dev,
+    struct device_attribute *attr, const char *buf, size_t count)
+{
+    return count;
 }
 
 //SYSFS tunables :
@@ -577,6 +645,61 @@ static ssize_t brightness_factor_auto_stop_hour_dump(struct device *dev,
     return count;
 }
 
+static ssize_t backlight_lower_show(struct device *dev,
+    struct device_attribute *attr, char *buf)
+{
+  size_t count = 0;
+
+  count += sprintf(buf, "%d\n", backlight_lower);
+
+  return count;
+}
+
+static ssize_t backlight_lower_dump(struct device *dev,
+    struct device_attribute *attr, const char *buf, size_t count)
+{
+    int tmpval = 0;
+
+    if (!sscanf(buf, "%d", &tmpval))
+      return -EINVAL;
+
+    if ((tmpval > 0) && (tmpval < backlight_upper))
+    {
+        backlight_lower = tmpval;
+        set_rgb_slider(last_bl);
+    }
+
+    return count;
+}
+
+static ssize_t backlight_upper_show(struct device *dev,
+    struct device_attribute *attr, char *buf)
+{
+  size_t count = 0;
+
+  count += sprintf(buf, "%d\n", backlight_upper);
+
+  return count;
+}
+
+static ssize_t backlight_upper_dump(struct device *dev,
+    struct device_attribute *attr, const char *buf, size_t count)
+{
+    int tmpval = 0;
+
+    if (!sscanf(buf, "%d", &tmpval))
+      return -EINVAL;
+
+    if ((tmpval > 0) && (tmpval > backlight_lower))
+    {
+        backlight_upper = tmpval;
+        set_rgb_slider(last_bl);
+    }
+
+    return count;
+}
+
+
 static DEVICE_ATTR(enable_klapse, 0644, enable_klapse_show, enable_klapse_dump);
 static DEVICE_ATTR(daytime_r, 0644, daytime_r_show, daytime_r_dump);
 static DEVICE_ATTR(daytime_g, 0644, daytime_g_show, daytime_g_dump);
@@ -591,6 +714,9 @@ static DEVICE_ATTR(brightness_factor, 0644, brightness_factor_show, brightness_f
 static DEVICE_ATTR(brightness_factor_auto, 0644, brightness_factor_auto_enable_show, brightness_factor_auto_enable_dump);
 static DEVICE_ATTR(brightness_factor_auto_start_hour, 0644, brightness_factor_auto_start_hour_show, brightness_factor_auto_start_hour_dump);
 static DEVICE_ATTR(brightness_factor_auto_stop_hour, 0644, brightness_factor_auto_stop_hour_show, brightness_factor_auto_stop_hour_dump);
+static DEVICE_ATTR(backlight_lower, 0644, backlight_lower_show, backlight_lower_dump);
+static DEVICE_ATTR(backlight_upper, 0644, backlight_upper_show, backlight_upper_dump);
+static DEVICE_ATTR(info, 0444, info_show, info_dump);
 
 //INIT
 static void values_setup(void)
@@ -611,10 +737,13 @@ static void values_setup(void)
     klapse_stop_hour = 7;
     brightness_factor_auto_start_hour = 23;
     brightness_factor_auto_stop_hour = 6;
-    enable_klapse = 0;
+    enable_klapse = DEFAULT_ENABLE;
     target_achieved = 0;
     brightness_factor_auto_enable = 0;
     calc_active_minutes();
+    backlight_lower = LOWER_BL_LVL;
+    backlight_upper = UPPER_BL_LVL;
+    last_bl = 1023;
 
     do_gettimeofday(&time);
     local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
@@ -634,6 +763,10 @@ static int __init klapse_init(void)
       pr_warn("%s: klapse_kobj create_and_add failed\n", __func__);
     }
 
+    rc = sysfs_create_file(klapse_kobj, &dev_attr_info.attr);
+    if (rc) {
+      pr_warn("%s: sysfs_create_file failed for info\n", __func__);
+    }
     rc = sysfs_create_file(klapse_kobj, &dev_attr_enable_klapse.attr);
     if (rc) {
       pr_warn("%s: sysfs_create_file failed for enable_klapse\n", __func__);
@@ -689,6 +822,14 @@ static int __init klapse_init(void)
     rc = sysfs_create_file(klapse_kobj, &dev_attr_brightness_factor_auto_stop_hour.attr);
     if (rc) {
       pr_warn("%s: sysfs_create_file failed for brightness_factor_auto_stop_hour\n", __func__);
+    }
+    rc = sysfs_create_file(klapse_kobj, &dev_attr_backlight_lower.attr);
+    if (rc) {
+      pr_warn("%s: sysfs_create_file failed for backlight_lower\n", __func__);
+    }
+    rc = sysfs_create_file(klapse_kobj, &dev_attr_backlight_upper.attr);
+    if (rc) {
+      pr_warn("%s: sysfs_create_file failed for backlight_upper\n", __func__);
     }
 
     return 0;
