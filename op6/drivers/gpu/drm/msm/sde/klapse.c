@@ -103,19 +103,20 @@ static bool hour_within_range(int start, int stop, int check)
     // if both extremes are same, no time is possible inside so return false.
     // else, start hour is actually greater than stop, something like "From 5pm to 7am"
     // which translates to "From 17 to 7". It is clear why this could be a problem if not handled.
-    if (start < stop)
+    if (start < stop) {
       if ((check >= start) && (check < stop))
         return 1;
       else
         return 0;
+    }
     else if (start == stop)
       return 0;
-    else
-      if ((check < stop) && (check >= start))
+    else {
+      if ((check < stop) || (check >= start))
         return 1;
       else
         return 0;
-
+    }
 }
 //klapse calc functions end here.
 
