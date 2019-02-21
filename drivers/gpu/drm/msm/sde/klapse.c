@@ -248,8 +248,8 @@ void set_enable_klapse(int val)
             current_g = daytime_g;
             current_b = daytime_b;
         }
-	    if (enable_klapse == 2)
-		    set_rgb_slider(last_bl);
+        if (enable_klapse == 2)
+            set_rgb_slider(last_bl);
     }
 }
 
