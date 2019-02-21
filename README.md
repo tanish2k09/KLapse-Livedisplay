@@ -18,7 +18,18 @@ GitHub, licensed under GPL (check klapse.c), open to everyone :)
 Think of it like a fancy night mode, but not really. Klapse is dependent on an RGB interface (like Gamma on MTK and KCAL on SD chipsets).
 It fetches time from the kernel, converts it to local time, and selects and RGB set based on the time. The result is really smooth shifting of RGB over time.
 
+### How does it really work (dev)?
+Klapse mode 1 (time-based scaling) uses a method `void klapse_pulse(void)` that should ideally be called every minute.
+This can be done by injecting a pulse call inside another method that is called repeatedly naturally, like cpufreq or atomic or frame commits.
+It can be anything, whatever you like, even a kthread, as long as it is called repeatedly naturally. To execute every 60 seconds, use jiffies or ktime, or any similar method.
+
+Klapse mode 2 (brightness-based scaling) uses a method `void set_rgb_slider(<type> bl_lvl)` where <type> is the data type of the brightness level used in your kernel source.
+(OnePlus 6 uses u32 data type for bl_lvl)
+set_rgb_slider needs to be called/injected inside a function that sets brightness for your device.
+(OnePlus 6 uses dsi_panel.c for that, check out the diff for that file in /op6)
+
 ### I want more! Tell me what can I customize!
+All these following tunables are found in their respective files in /sys/klapse/
 ```python
 1. enable_klapse : A switch to enable or disable klapse. Values : 0 = off, 1 = on (in v2, 2 = brightness-dependent mode)
 2. klapse_start_hour : The hour at which klapse should start scaling the RGB values from daytime to target (see next points). Values : 0-23
@@ -30,4 +41,6 @@ It fetches time from the kernel, converts it to local time, and selects and RGB 
 8. brightness_factor_auto : A switch that allows you to automatically set the brightness factor in a set time range. Value : 0 = off, 1 = on
 9. brightness_factor_auto_start_hour : The hour at which brightness_factor should be applied. Works only if #8 is 1. Values : 0-23
 10. brightness_factor_auto_stop_hour : The hour at which brightness_factor should be reverted to 10. Works only if #8 is 1. Values : 0-23
+11. backlight_lower : The brightness level at which klapse should reach target_rgb. Works only if #1 is 2. Values : MIN_BRIGHTNESS-backlight_upper
+12. backlight_upper : The brightness level at which klapse should reach daytime_rgb. Works only if #1 is 2. Values : backlight_lower-MAX_BRIGHTNESS
 ```
