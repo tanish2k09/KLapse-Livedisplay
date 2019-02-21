@@ -10,7 +10,9 @@ Starting from Android Nougat, a native night mode solution was added to AOSP and
 thanks to its various options (you could say it spoiled me, sure). I also maintained a kernel (Venom kernel) for the device I was using at that time.
 It was all good until the OEM dropped support for the device at Android M, and XDA being XDA, was already working on N ROMs.
 The issue was, these ROMs weren't LineageOS or based on it, so livedisplay was... gone. I decided I'll try to bring that feature to every other ROM.
-How would I do that? Of course! The kernel! It worked on every single ROM, it was the key! I started to work on it ASAP and here it is, up on GitHub, licensed under GPLv3, open to everyone :)
+How would I do that? Of course! The kernel! It worked on every single 
+ROM, it was the key! I started to work on it ASAP and here it is, up on 
+GitHub, licensed under GPL (check klapse.c), open to everyone :)
 
 ### How does it work?
 Think of it like a fancy night mode, but not really. Klapse is dependent on an RGB interface (like Gamma on MTK and KCAL on SD chipsets).
