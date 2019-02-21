@@ -23,6 +23,9 @@
 // MAX_BRIGHTNESS : Maximum value of the display brightness/backlight
 #define MAX_BRIGHTNESS  1023
 
+// MIN_BRIGHTNESS : Minimum value of the display brightness/backlight
+#define MIN_BRIGHTNESS  2
+
 /* UPPER_BL_LVL : Initial upper limit for brightness-dependent mode. 
  * Value <= MAX_BRIGHTNESS && > LOWER_BL_LVL (MUST)
  */
@@ -33,9 +36,9 @@
  */
 #define LOWER_BL_LVL 2
 
-#define LIC "GPLv3"
+#define LIC "GPLv2"
 #define AUT "tanish2k09"
-#define VER "2.0"
+#define VER "2.1"
 
 MODULE_LICENSE(LIC);
 MODULE_AUTHOR(AUT);
@@ -212,21 +215,24 @@ void klapse_pulse(void)
 // Brightness-based mode
 void set_rgb_slider(u32 bl_lvl)
 {
-  if ((enable_klapse == 2) && (bl_lvl <= MAX_BRIGHTNESS))
+  if (bl_lvl >= MIN_BRIGHTNESS)
   {
-    if (bl_lvl > backlight_upper)
-      set_rgb_brightness(daytime_r, daytime_g, daytime_b);
-    else if (bl_lvl < backlight_lower)
-      set_rgb_brightness(target_r, target_g, target_b);
-    else {
-      current_r = daytime_r - ((daytime_r - target_r)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
-      current_g = daytime_g - ((daytime_g - target_g)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
-      current_b = daytime_b - ((daytime_b - target_b)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
-      set_rgb_brightness(current_r, current_g, current_b);
+    if ((enable_klapse == 2) && (bl_lvl <= MAX_BRIGHTNESS))
+    {
+      if (bl_lvl > backlight_upper)
+        set_rgb_brightness(daytime_r, daytime_g, daytime_b);
+      else if (bl_lvl < backlight_lower)
+        set_rgb_brightness(target_r, target_g, target_b);
+      else {
+        current_r = daytime_r - ((daytime_r - target_r)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
+        current_g = daytime_g - ((daytime_g - target_g)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
+        current_b = daytime_b - ((daytime_b - target_b)*(backlight_upper - bl_lvl)/(backlight_upper - backlight_lower));
+        set_rgb_brightness(current_r, current_g, current_b);
+      }
     }
-  }
   
-  last_bl = bl_lvl;
+    last_bl = bl_lvl;
+  }
 }
 
 void set_enable_klapse(int val)
