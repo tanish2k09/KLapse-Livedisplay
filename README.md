@@ -1,10 +1,10 @@
 # KLapse - A kernel level livedisplay module
 
 ### What is it?
-Kernel-based Lapse ("K-Lapse") is a linear RGB scaling module that 'shifts' RGB based on time (of the day/selected by user).
+Kernel-based Lapse ("K-Lapse") is a linear RGB scaling module that 'shifts' RGB based on time (of the day/selected by user), or (since v2.0) brightness.
 This concept is inspired from LineageOS (formerly known as 'CyanogenMod') ROM's feature "livedisplay" which also changes the display settings (RGB, hue, temperature, etc) based on time.
 
-### Why did I decide to make this? Tell me a story.
+### Why did you decide to make this? (Tell me a story).
 I (personally) am a big fan of the livedisplay feature found on LineageOS ROM. I used it every single day, since Android Lollipop.
 Starting from Android Nougat, a native night mode solution was added to AOSP and it felt like livedisplay was still way superior,
 thanks to its various options (you could say it spoiled me, sure). I also maintained a kernel (Venom kernel) for the device I was using at that time.
@@ -22,11 +22,35 @@ It fetches time from the kernel, converts it to local time, and selects and RGB 
 Klapse mode 1 (time-based scaling) uses a method `void klapse_pulse(void)` that should ideally be called every minute.
 This can be done by injecting a pulse call inside another method that is called repeatedly naturally, like cpufreq or atomic or frame commits.
 It can be anything, whatever you like, even a kthread, as long as it is called repeatedly naturally. To execute every 60 seconds, use jiffies or ktime, or any similar method.
+The pulse function fetches the current time and makes calculations based on the current hour and the values of the tunables listed down below.
 
 Klapse mode 2 (brightness-based scaling) uses a method `void set_rgb_slider(<type> bl_lvl)` where <type> is the data type of the brightness level used in your kernel source.
 (OnePlus 6 uses u32 data type for bl_lvl)
 set_rgb_slider needs to be called/injected inside a function that sets brightness for your device.
 (OnePlus 6 uses dsi_panel.c for that, check out the diff for that file in /op6)
+
+### What all stuff can it do?
+1. Emulate night mode with the proper RGB settings
+2. Smoothly scale from one set of RGB to another set of RGB in integral intervals over time.
+3. Reduce perceived brightness using brightness_factor by reducing the amount of color on screen. Allows lower apparent brightness than system permits.
+4. Scale RGB based on brightness of display (low brightness usually implies a dark environment, where yellowness is probably useful).
+5. Automate the perceived brightness independent of whether klapse is enabled, using its own set of start and stop hours.
+6. Be more efficient,faster by residing inside the kernel instead of having to use the HWC HAL like android's night mode.
+7. (On older devices) Reduce stuttering or frame lags caused by native night mode.
+8. An easier solution against overlay-based apps that run as service in userspace/Android and sometimes block apps asking for permissions.
+9. Give you a Livedisplay alternative if it doesn't work in your ROM.
+10. Impress your crush so you can get a date (Hey, don't forget to credit me if it works).
+
+### Alright, so this is a replacement for night mode?
+NO! Not at all. One can say this is merely an alternative for LineageOS' Livedisplay, but inside a kernel. Night mode is a sub-function of both Livedisplay and KLapse.
+Most comparisons here were made with night mode because that's what an average user uses, and will relate to the most.
+There is absolutely no reason for your Android kernel to not have KLapse. Go ahead and add it or ask your kernel maintainer to. It's super-easy!
+
+### What can it NOT do (yet)?
+1. Calculate scaling to the level of minutes, like "Start from 5:37pm till 7:19am". --TODO
+2. Make coffee for you.
+3. Fly you to the moon. Without a heavy suit.
+4. Get you a monthly subscription of free food, cereal included.
 
 ### I want more! Tell me what can I customize!
 All these following tunables are found in their respective files in /sys/klapse/
