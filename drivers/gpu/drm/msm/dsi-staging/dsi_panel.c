@@ -697,18 +697,18 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 	}
 
 	dsi = &panel->mipi_device;
-	if (panel->is_hbm_enabled){
+
+	if (panel->is_hbm_enabled)
 		return 0;
-		}
-    if (panel->bl_config.bl_high2bit){
-	if(HBM_flag==true){
-		return 0;
-		}
-	else{
+
+	if (panel->bl_config.bl_high2bit) {
+		if (HBM_flag)
+			return 0;
 		rc = mipi_dsi_dcs_set_display_brightness_samsung(dsi, bl_lvl);
-		}
-    } else
-	rc = mipi_dsi_dcs_set_display_brightness(dsi, bl_lvl);
+	} else {
+		rc = mipi_dsi_dcs_set_display_brightness(dsi, bl_lvl);
+	}
+
 	if (rc < 0)
 		pr_err("failed to update dcs backlight:%d\n", bl_lvl);
 
@@ -1709,14 +1709,14 @@ static int dsi_panel_create_cmd_packets(const char *data,
 	return rc;
 error_free_payloads:
 	for (i = i - 1; i >= 0; i--) {
-		cmd--;
-		kfree(cmd->msg.tx_buf);
+		kfree(cmd[i].msg.tx_buf);
+		cmd[i].msg.tx_buf = NULL;
 	}
 
 	return rc;
 }
 
-void dsi_panel_destroy_cmd_packets(struct dsi_panel_cmd_set *set)
+static void dsi_panel_destroy_cmds_packets_buf(struct dsi_panel_cmd_set *set)
 {
 	u32 i = 0;
 	struct dsi_cmd_desc *cmd;
@@ -1724,9 +1724,15 @@ void dsi_panel_destroy_cmd_packets(struct dsi_panel_cmd_set *set)
 	for (i = 0; i < set->count; i++) {
 		cmd = &set->cmds[i];
 		kfree(cmd->msg.tx_buf);
+		cmd->msg.tx_buf = NULL;
 	}
+}
 
+static void dsi_panel_destroy_cmd_packets(struct dsi_panel_cmd_set *set)
+{
+	dsi_panel_destroy_cmds_packets_buf(set);
 	kfree(set->cmds);
+	set->count = 0;
 }
 
 static int dsi_panel_alloc_cmd_packets(struct dsi_panel_cmd_set *cmd,
@@ -2988,7 +2994,7 @@ int dsi_panel_parse_esd_reg_read_configs(struct dsi_panel *panel,
 	}
 
 	esd_config->status_value =
-		kzalloc(sizeof(u32) * status_len * esd_config->groups,
+		kzalloc(array3_size(sizeof(u32), status_len, esd_config->groups),
 			GFP_KERNEL);
 	if (!esd_config->status_value) {
 		rc = -ENOMEM;
@@ -3402,10 +3408,13 @@ void dsi_panel_put_mode(struct dsi_display_mode *mode)
 	if (!mode->priv_info)
 		return;
 
+	kfree(mode->priv_info->phy_timing_val);
+
 	for (i = 0; i < DSI_CMD_SET_MAX; i++)
 		dsi_panel_destroy_cmd_packets(&mode->priv_info->cmd_sets[i]);
 
 	kfree(mode->priv_info);
+	mode->priv_info = NULL;
 }
 
 int dsi_panel_get_mode(struct dsi_panel *panel,
@@ -3604,9 +3613,9 @@ int dsi_panel_update_pps(struct dsi_panel *panel)
 	if (rc) {
 		pr_err("[%s] failed to send DSI_CMD_SET_PPS cmds, rc=%d\n",
 			panel->name, rc);
-		goto error;
 	}
 
+	dsi_panel_destroy_cmds_packets_buf(set);
 error:
 	mutex_unlock(&panel->panel_lock);
 	return rc;
@@ -3898,9 +3907,6 @@ int dsi_panel_enable(struct dsi_panel *panel)
 	mutex_lock(&panel->panel_lock);
 	printk(KERN_ERR"Send DSI_CMD_SET_ON\n");
 	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_ON);
-	if(panel->aod_mode!=2){
-		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_POST_ON);
-		}
 	if (rc) {
 		pr_err("[%s] failed to send DSI_CMD_SET_ON cmds, rc=%d\n",
 		       panel->name, rc);
@@ -3943,7 +3949,6 @@ int dsi_panel_enable(struct dsi_panel *panel)
 int dsi_panel_post_enable(struct dsi_panel *panel)
 {
 	int rc = 0;
-	return 0;
 
 	if (!panel) {
 		pr_err("invalid params\n");
@@ -4343,11 +4348,12 @@ int dsi_panel_set_dci_p3_mode(struct dsi_panel *panel, int level)
 	mutex_lock(&panel->panel_lock);
     if (level) {
         count = mode->priv_info->cmd_sets[DSI_CMD_SET_DCI_P3_ON].count;
-			printk(KERN_ERR"Real Send DCI-P3 on command\n");
+
+
             rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_DCI_P3_ON);
             pr_err("DCI-P3 Mode On.\n");
     } else {   
-			printk(KERN_ERR"Real Send DCI-P3 off command\n");
+
             rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_DCI_P3_OFF);
             pr_err("DCI-P3 Mode Off.\n");
     }
@@ -4369,12 +4375,12 @@ int dsi_panel_set_night_mode(struct dsi_panel *panel, int level)
 	mutex_lock(&panel->panel_lock);
     if (level) {
         count = mode->priv_info->cmd_sets[DSI_CMD_SET_NIGHT_ON].count;
-			printk(KERN_ERR"Real Send Night mode on command\n");
+
             rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_NIGHT_ON);
             pr_err("night Mode On.\n");
     } else {
         count = mode->priv_info->cmd_sets[DSI_CMD_SET_NIGHT_OFF].count;
-			printk(KERN_ERR"Real Send Night mode off command\n");
+
             rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_NIGHT_OFF);
             pr_err("night Mode Off.\n");
     }
@@ -4454,7 +4460,6 @@ int dsi_panel_set_adaption_mode(struct dsi_panel *panel, int level)
 return rc;
 }
 bool aod_real_flag = false;
-bool aod_complete = false;
 int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level)
 {
 	int rc = 0;
@@ -4482,7 +4487,6 @@ int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level)
 			printk(KERN_ERR"send AOD ON commd mode 2 start \n");
             rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_2);
 			aod_real_flag=false;
-			aod_complete=true;
 			printk(KERN_ERR"send AOD ON commd mode 2 end   \n");
            
         }
@@ -4505,10 +4509,9 @@ int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level)
 		        dsi_panel_set_night_mode(panel, panel->night_mode);
 		    if (panel->adaption_mode)
 		        dsi_panel_set_adaption_mode(panel, panel->adaption_mode);
-			   rc= dsi_panel_update_backlight(panel,panel->bl_config.bl_level);
-				}
+                                }
               printk(KERN_ERR"send AOD OFF commd end \n");
-              aod_complete = false;
+                
             }
         }
     panel->aod_curr_mode = level;
