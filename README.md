@@ -55,16 +55,15 @@ There is absolutely no reason for your Android kernel to not have KLapse. Go ahe
 ### I want more! Tell me what can I customize!
 All these following tunables are found in their respective files in /sys/klapse/
 ```python
-1. enable_klapse : A switch to enable or disable klapse. Values : 0 = off, 1 = on (in v2, 2 = brightness-dependent mode)
+1. enable_klapse : A switch to enable or disable klapse. Values : 0 = off, 1 = on (since v2.0, 2 = brightness-dependent mode)
 2. klapse_start_hour : The hour at which klapse should start scaling the RGB values from daytime to target (see next points). Values : 0-23
 3. klapse_stop_hour : The hour by which klapse should scale back the RGB values from target to daytime (see next points). Values : 0-23
-4. daytime_r, g, b : The RGB set that must be used for all the time outside of start and stop hour range.
-5. target_r, g, b : The RGB set that must be scaled towards for all the time inside of start and stop hour range.
+4. daytime_rgb : The RGB set that must be used for all the time outside of start and stop hour range.
+5. target_rgb : The RGB set that must be scaled towards for all the time inside of start and stop hour range.
 6. klapse_scaling_rate : Controls how soon the RGB reaches from daytime to target inside of start and stop hour range. Once target is reached, it remains constant till 30 minutes before stop hour, where target RGB scales back to daytime RGB.
 7. brightness_factor : From the name itself, this value has the ability to bend perception and make your display appear as if it is at a lesser brightness level than it actually is at. It works by reducing the RGB values by the same factor. Values : 2-10, (10 means accurate brightness, 5 means 50% of current brightness, you get it)
 8. brightness_factor_auto : A switch that allows you to automatically set the brightness factor in a set time range. Value : 0 = off, 1 = on
 9. brightness_factor_auto_start_hour : The hour at which brightness_factor should be applied. Works only if #8 is 1. Values : 0-23
 10. brightness_factor_auto_stop_hour : The hour at which brightness_factor should be reverted to 10. Works only if #8 is 1. Values : 0-23
-11. backlight_lower : The brightness level at which klapse should reach target_rgb. Works only if #1 is 2. Values : MIN_BRIGHTNESS-backlight_upper
-12. backlight_upper : The brightness level at which klapse should reach daytime_rgb. Works only if #1 is 2. Values : backlight_lower-MAX_BRIGHTNESS
+11. backlight_range : The brightness range within which klapse should scale from daytime to target_rgb. Works only if #1 is 2. Values : MIN_BRIGHTNESS-MAX_BRIGHTNESS
 ```
