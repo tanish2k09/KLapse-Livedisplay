@@ -19,9 +19,8 @@ Think of it like a fancy night mode, but not really. Klapse is dependent on an R
 It fetches time from the kernel, converts it to local time, and selects and RGB set based on the time. The result is really smooth shifting of RGB over time.
 
 ### How does it really work (dev)?
-Klapse mode 1 (time-based scaling) uses a method `void klapse_pulse(void)` that should ideally be called every minute.
-This can be done by injecting a pulse call inside another method that is called repeatedly naturally, like cpufreq or atomic or frame commits.
-It can be anything, whatever you like, even a kthread, as long as it is called repeatedly naturally. To execute every 60 seconds, use jiffies or ktime, or any similar method.
+Klapse mode 1 (time-based scaling) uses a method `void klapse_pulse(unsigned long data)` that should ideally be called every minute.
+This is done using a kernel timer, that is asynchronous so it should be handled with care, which I did.
 The pulse function fetches the current time and makes calculations based on the current hour and the values of the tunables listed down below.
 
 Klapse mode 2 (brightness-based scaling) uses a method `void set_rgb_slider(<type> bl_lvl)` where <type> is the data type of the brightness level used in your kernel source.
@@ -66,4 +65,6 @@ All these following tunables are found in their respective files in /sys/klapse/
 9. brightness_factor_auto_start_hour : The hour at which brightness_factor should be applied. Works only if #8 is 1. Values : 0-23
 10. brightness_factor_auto_stop_hour : The hour at which brightness_factor should be reverted to 10. Works only if #8 is 1. Values : 0-23
 11. backlight_range : The brightness range within which klapse should scale from daytime to target_rgb. Works only if #1 is 2. Values : MIN_BRIGHTNESS-MAX_BRIGHTNESS
+12. pulse_freq : The amount of milliseconds after which klapse_pulse is called. A more developer-targeted tunable. Only works when one or both of #1 and #8 are 1. Values : 1000-600000 (Represents 1sec to 10 minutes
+13. fadeback_minutes : The number of minutes before klapse_stop_hour when RGB should start going back to daytime_rgb. Only works when #1 is 1. Values : 2-minutes between #2 and #3
 ```
