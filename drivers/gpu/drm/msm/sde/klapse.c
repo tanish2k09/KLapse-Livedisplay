@@ -73,11 +73,6 @@ static struct timer_list pulse_timer;
 
 
 //klapse related functions
-bool should_pulse()
-{
-  return ((enable_klapse == 1) || (brightness_factor_auto_enable));
-}
-
 void restart_timer()
 {
   mod_timer(&pulse_timer, jiffies + msecs_to_jiffies(pulse_freq));
