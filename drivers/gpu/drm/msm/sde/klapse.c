@@ -73,20 +73,20 @@ static struct timer_list pulse_timer;
 
 
 //klapse related functions
-void restart_timer()
+static void restart_timer(void)
 {
   mod_timer(&pulse_timer, jiffies + msecs_to_jiffies(pulse_freq));
   printk(KERN_INFO "KLapse pulse timer restarted!!!.\n");
 }
 
-void flush_timer()
+static void flush_timer(void)
 {
   if (timer_pending(&pulse_timer))
     mod_timer_pending(&pulse_timer, jiffies);
   printk(KERN_INFO "KLapse pulse timer flushed!!!.\n");
 }
 
-void calc_active_minutes(void)
+static void calc_active_minutes(void)
 {
     if(klapse_start_hour > klapse_stop_hour)
         active_minutes = (24 + klapse_stop_hour - klapse_start_hour)*60;
@@ -175,7 +175,7 @@ static bool hour_within_range(int start, int stop, int check)
 //klapse calc functions end here.
 
 // klapse rgb update function
-void klapse_pulse(unsigned long data)
+static void klapse_pulse(unsigned long data)
 {
     int backtime;        
        
@@ -264,7 +264,7 @@ void set_rgb_slider(u32 bl_lvl)
   }
 }
 
-void set_enable_klapse(int val)
+static void set_enable_klapse(int val)
 {
     if ((val <= 2) && (val >= 0))
     {
@@ -660,7 +660,7 @@ static ssize_t pulse_freq_show(struct device *dev,
 static ssize_t pulse_freq_dump(struct device *dev,
     struct device_attribute *attr, const char *buf, size_t count)
 {
-    unsigned long tmp = 0;
+    unsigned int tmp = 0;
 
     if (!sscanf(buf, "%u", &tmp))
       return -EINVAL;     
