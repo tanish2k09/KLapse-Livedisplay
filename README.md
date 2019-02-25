@@ -23,7 +23,7 @@ Klapse mode 1 (time-based scaling) uses a method `void klapse_pulse(unsigned lon
 This is done using a kernel timer, that is asynchronous so it should be handled with care, which I did.
 The pulse function fetches the current time and makes calculations based on the current hour and the values of the tunables listed down below.
 
-Klapse mode 2 (brightness-based scaling) uses a method `void set_rgb_slider(<type> bl_lvl)` where <type> is the data type of the brightness level used in your kernel source.
+Klapse mode 2 (brightness-based scaling) uses a method `void set_rgb_slider(<type> bl_lvl)` where type is the data type of the brightness level used in your kernel source.
 (OnePlus 6 uses u32 data type for bl_lvl)
 set_rgb_slider needs to be called/injected inside a function that sets brightness for your device.
 (OnePlus 6 uses dsi_panel.c for that, check out the diff for that file in /op6)
@@ -48,7 +48,7 @@ There is absolutely no reason for your Android kernel to not have KLapse. Go ahe
 ### What can it NOT do (yet)?
 1. Calculate scaling to the level of minutes, like "Start from 5:37pm till 7:19am". --TODO
 2. Make coffee for you.
-3. Fly you to the moon. Without a heavy suit.
+3. Fly you to the moon.
 4. Get you a monthly subscription of free food, cereal included.
 
 ### I want more! Tell me what can I customize!
