@@ -26,7 +26,7 @@ The pulse function fetches the current time and makes calculations based on the 
 Klapse mode 2 (brightness-based scaling) uses a method `void set_rgb_slider(<type> bl_lvl)` where type is the data type of the brightness level used in your kernel source.
 (OnePlus 6 uses u32 data type for bl_lvl)
 set_rgb_slider needs to be called/injected inside a function that sets brightness for your device.
-(OnePlus 6 uses dsi_panel.c for that, check out the diff for that file in /op6)
+(OnePlus 6 uses dsi_panel.c for that, check out the diff for that file in op6 branch)
 
 ### What all stuff can it do?
 1. Emulate night mode with the proper RGB settings
