@@ -18,6 +18,7 @@ extern void set_rgb_slider(u32 bl_lvl);
  #define K_BLUE   kcal_get_color(2)
 
  extern K_TYPE kcal_get_color(unsigned short int code);
+ extern void klapse_kcal_push(int r, int g, int b);
 #else
  #define K_RED    kcal_red
  #define K_GREEN  kcal_green
