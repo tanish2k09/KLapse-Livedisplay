@@ -1,9 +1,10 @@
 #include <linux/module.h>
 #include <linux/init.h>
-#include <uapi/linux/time.h>
-#include <uapi/linux/rtc.h>
-#include <linux/rtc.h>
+#include <linux/hrtimer.h>
 #include <linux/timer.h>
+#include <linux/time.h>
+#include <linux/rtc.h>
+#include <linux/alarmtimer.h>
 #include "klapse.h"
 
 #define LIC "GPLv2"
