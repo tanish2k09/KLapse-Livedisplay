@@ -1,1 +1,1 @@
-obj-$(CONFIG_KLAPSE)    += klapse/klapse.o
+obj-$(CONFIG_KLAPSE)    += klapse/
