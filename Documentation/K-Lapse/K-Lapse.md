@@ -63,7 +63,7 @@ All these following tunables are found in their respective files in /sys/module/
 5. target_r,g,b : The RGB set that must be scaled towards for all the time inside of start and stop minutes range (mode 1), or below bl_range_lower (mode 2)
 6. target_minutes : Controls how soon the RGB reaches from daytime to target inside of start and stop hour range. Once target is reached, it remains constant till fadeback_minutes (#13) before stop hour, where target RGB scales back to daytime RGB.
 7. dimmer_factor : From the name itself, this value has the ability to bend perception and make your display appear as if it is at a lesser brightness level than it actually is at. It works by reducing the RGB values by the same factor. Values : 10-100, (100 means accurate brightness, 50 means 50% of current intensity, you get it)
-8. dimmer_factor_auto : A switch that allows you to automatically set the brightness factor in a set time range. Value : 0 = off, 1 = on
+8. dimmer_factor_auto : A switch that allows you to automatically set the dimmer factor in a set time range. Value : (read) N/Y (write) 0/1
 9. dimmer_auto_start_minute : The minute stamp at which dimmer_factor should be applied. Works only if #8 is 1. Values : 0-1439
 10. dimmer_auto_stop_minute : The minute stamp at which brightness_factor should be reverted to 100. Works only if #8 is 1. Values : 0-1439
 11. bl_range_upper and _lower : The brightness range within which klapse should scale from daytime to target_rgb. Works only if #1 is 2. Values : MIN_BRIGHTNESS-MAX_BRIGHTNESS
