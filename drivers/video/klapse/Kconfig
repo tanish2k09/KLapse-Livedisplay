@@ -3,4 +3,3 @@ config KLAPSE
     default n
     help
         A simple rgb dynamic lapsing module similar to LineageOS' livedisplay
-
