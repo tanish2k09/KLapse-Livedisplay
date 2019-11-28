@@ -1,0 +1,5 @@
+#
+# Video configuration
+#
+
+source "drivers/video/klapse/Kconfig"
