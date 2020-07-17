@@ -5,13 +5,12 @@ Kernel-based Lapse ("K-lapse") is a linear RGB scaling module that 'shifts' RGB 
 This concept is inspired from LineageOS (formerly known as 'CyanogenMod') ROM's feature "livedisplay" which also changes the display settings (RGB, hue, temperature, etc) based on time.
 
 ### Why did you decide to make this? (Tell me a story).
-I (personally) am a big fan of the livedisplay feature found on LineageOS ROM. I used it every single day, since Android Lollipop.
-Starting from Android Nougat, a native night mode solution was added to AOSP and it felt like livedisplay was still way superior,
+I am a big fan of the livedisplay feature found on LineageOS ROM. I used it every single day, since Android Lollipop.
+Starting from Android Nougat, a native night mode solution was added to AOSP and I felt like livedisplay was still way superior,
 thanks to its various options (you could say it spoiled me, sure). I also maintained a kernel (Venom kernel) for the device I was using at that time.
-It was all good until the OEM dropped support for the device at Android M, and XDA being XDA, was already working on N ROMs.
-The issue was, these ROMs weren't LineageOS or based on it, so livedisplay was... gone. I decided I'll try to bring that feature to every other ROM.
-How would I do that? Of course! The kernel! It worked on every single
-ROM, it was the key! I started to work on it ASAP and here it is, up on
+It was all good until the OEM dropped support for the device at Android M, and XDA being XDA, was already working on Nougat custom ROMs.
+The issue was, these custom ROMs did not have livedisplay. I decided I'll try to bring that feature to every custom ROM, and even stock ROM (because let's face it, it was the most stable ROM you could get on a Lenovo device).
+How would I do that? Of course! The kernel! It worked on every single ROM, it was the key! I started to work on it ASAP and here it is, up on
 GitHub, licensed under GPLv2 (check klapse.c), open to everyone :)
 
 ### How does it work?
@@ -53,7 +52,7 @@ There is absolutely no reason for your Android kernel to not have K-lapse. Go ah
 1. Grayscale temperature shifts
 2. Invert temperature shifts
 
-### I want more! Tell me what can I customize!
+### I want more! Tell me about the things I can customize!
 All these following tunables are found in their respective files in /sys/module/klapse/parameters/
 ```python
 1. enabled_mode : A switch to enable or disable klapse. Values : 0 = off, 1 = time mode, 2 = brightness mode
@@ -73,9 +72,9 @@ All these following tunables are found in their respective files in /sys/module/
 ```
 
 ### Worth noting for kernel manager apps:
-1. Dimmer options can all work independent of enabled_mode values. K-lapse doesn't have to be on for dimmer to work. DO NOT HIDE DIMMER OPTIONS IN UI. HAVE A SEPARATE SECTION IN THE PAGE FOR DIMMER CONTROLS.
-2. bl_range_upper and bl_range_lower share the same input handler, so if you input a value larger than upper inside the lower file, the value will automatically be assigned to upper. Same goes the other way. Putting a smaller value in upper than lower will change lower instead. It is guaranteed that upper will be a higher value than lower, unless some retard messed it up at compile time.
-3. flow_freq is recommended to be added as a slightly not-so-obvious control, because it can change behaviour of scaling and the user will probably blame you or me for being a retard.
+1. Dimmer options can all work independent of enabled_mode values. K-lapse doesn't have to be on for dimmer to work. It is advisable to not hide the dimmer options in UI, and maybe to have a separate section for dimmer controls.
+2. bl_range_upper and bl_range_lower share the same input handler, so if you input a value larger than upper inside the lower file, the value will automatically be assigned to upper. Same goes the other way. Putting a smaller value in upper than lower will change lower instead. It is guaranteed that upper will be a higher value than lower, unless it is messed up at compile time.
+3. flow_freq is recommended to be added as a slightly not-so-obvious control, because it can change behaviour of scaling and the user will probably blame you or me for something they changed and dislike.
 4. Parameters only available for use in mode 1 (time) : start_minute, stop_minute, target_minutes, fadeback_minutes.
 5. Parameters only available for use in mode 2 (brightness) : bl_range_upper, bl_range_lower, flow_freq
 6. Parameters ALWAYS available : daytime_r, daytime_g, daytime_b, target_r, target_g, target_b, pulse_freq, and all the dimmer options.
