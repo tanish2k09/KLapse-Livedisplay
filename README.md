@@ -1,4 +1,4 @@
-![k-lapse logo](https://www.manku.dev/static/media/klapse.3db7445b.png)
+![k-lapse logo](https://www.manku.dev/assets/klapse.png)
 
 # K-lapse : A kernel level livedisplay module
 
